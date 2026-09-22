@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cobranzas FADEP — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF1F5; --surface: #FFFFFF; --surface-alt: #F6F8FA;
+    --border: #DAE0E7; --border-soft: #E7EBEF;
+    --ink: #16202B; --ink-soft: #5B6B7C; --ink-faint: #8A97A6;
+    --brand: #1B3A5C; --brand-ink: #FFFFFF; --brand-soft: #E7EEF5;
+    --accent: #3E7C6B; --accent-ink: #FFFFFF;
+    --ok-bg: #CFEFDD; --ok-text: #0F6B41;
+    --warn-bg: #FDEFC7; --warn-text: #8A5A10;
+    --bad-bg: #FBD9DC; --bad-text: #93131F;
+    --na-bg: #E4E8ED; --na-text: #6B7686;
+    --unc-bg: #EDE0FA; --unc-text: #6B3FA0;
+    --radius-sm: 5px; --radius-md: 9px;
+    --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10161D; --surface: #171F28; --surface-alt: #1D2733;
+      --border: #2B3745; --border-soft: #232E3A;
+      --ink: #E7ECF1; --ink-soft: #A9B6C4; --ink-faint: #798492;
+      --brand: #2E5680; --brand-soft: #1E2E40; --accent: #4C9583;
+      --ok-bg: #123826; --ok-text: #6FDDA6;
+      --warn-bg: #3B2E0E; --warn-text: #E8C167;
+      --bad-bg: #3A1418; --bad-text: #F19198;
+      --na-bg: #232B34; --na-text: #8894A2;
+      --unc-bg: #2A2140; --unc-text: #C4A6F0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
+  body { min-height: 100%; padding-bottom: 40px; }
+  button { font-family: inherit; }
+
+  .wrap { max-width: 1220px; margin: 0 auto; padding: 0 16px; }
+  header.top {
+    background: var(--brand); color: var(--brand-ink);
+    padding: calc(22px + env(safe-area-inset-top, 0px)) 0 20px;
+  }
+  header.top .inner {
+    max-width: 1220px; margin: 0 auto; padding: 0 16px;
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px;
+  }
+  header.top h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  header.top h1 span.mark { font-family: var(--font-mono); opacity: .7; font-weight: 500; font-size: .85em; margin-right: 8px; }
+  header.top .sub { font-size: 13px; color: rgba(255,255,255,.72); margin-top: 3px; }
+  header.top .who { font-size: 12.5px; color: rgba(255,255,255,.65); font-family: var(--font-mono); display: flex; align-items: center; gap: 8px; }
+  header.top .who button { background: none; border: 1px solid rgba(255,255,255,.4); color: rgba(255,255,255,.8);
+    border-radius: 5px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+
+  .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 18px 0 14px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 13px 14px; border-left: 3px solid var(--stat-color, var(--ink-faint)); }
+  .stat .n { font-family: var(--font-mono); font-size: 26px; font-weight: 600; line-height: 1; }
+  .stat .l { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; }
+  .stat.s-fact { --stat-color: var(--warn-text); }
+  .stat.s-cobr { --stat-color: var(--bad-text); }
+  .stat.s-aut  { --stat-color: var(--ok-text); }
+
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .toolbar input[type="search"] {
+    flex: 1 1 200px; min-width: 140px; padding: 9px 12px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font-size: 14px;
+  }
+  .toolbar input[type="search"]:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .toggle-label { display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--ink-soft); user-select: none; cursor: pointer; }
+  .toggle-label input { accent-color: var(--brand); width: 15px; height: 15px; }
+  .btn { border: 1px solid transparent; border-radius: var(--radius-sm); padding: 9px 14px; font-size: 13.5px;
+    font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+  .table-shell { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 1180px; }
+  thead th {
+    text-align: left; font-size: 11.5px; font-weight: 600; color: var(--ink-soft);
+    padding: 10px; border-bottom: 1px solid var(--border); background: var(--surface-alt);
+    white-space: nowrap; position: sticky; top: 0; z-index: 2;
+  }
+  thead th.col-cliente { left: 0; z-index: 3; }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.col-cliente, th.col-cliente { position: sticky; left: 0; background: var(--surface); box-shadow: 1px 0 0 var(--border); min-width: 190px; }
+  td.col-narrow { min-width: 68px; } td.col-mid { min-width: 96px; }
+
+  .cliente-input { width: 100%; border: 1px solid transparent; background: transparent; color: var(--ink);
+    font-size: 14px; font-weight: 500; padding: 3px 5px; border-radius: 4px; font-family: var(--font-sans); }
+  .cliente-input:hover { border-color: var(--border); }
+  .cliente-input:focus { border-color: var(--brand); outline: none; background: var(--surface-alt); }
+  .field-input { width: 100%; border: 1px solid transparent; background: transparent; color: var(--ink);
+    font-size: 12.5px; padding: 3px 5px; border-radius: 4px; font-family: var(--font-mono); }
+  .field-input:hover { border-color: var(--border); }
+  .field-input:focus { border-color: var(--brand); outline: none; background: var(--surface-alt); }
+
+  select.cond-select { font-size: 12.5px; padding: 6px 7px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); color: var(--ink); max-width: 150px; font-family: var(--font-sans); }
+
+  .step-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 14px; cursor: pointer; background: var(--na-bg); color: var(--na-text);
+    display: flex; align-items: center; justify-content: center; transition: transform .06s ease; }
+  .step-btn:active { transform: scale(0.92); }
+  .step-btn[data-state="☐"] { background: var(--surface-alt); color: var(--ink-faint); border-style: dashed; }
+  .step-btn[data-state="☑"] { background: var(--ok-bg); color: var(--ok-text); border-color: transparent; }
+  .step-btn[data-state="—"] { background: var(--na-bg); color: var(--na-text); border-style: dotted; }
+  .step-btn[data-state="?"] { background: var(--unc-bg); color: var(--unc-text); border-color: transparent; font-weight: 700; }
+  .step-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 20px;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap; font-family: var(--font-mono); }
+  .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn-text); }
+  .badge.bad { background: var(--bad-bg); color: var(--bad-text); }
+  .badge.empty { background: var(--na-bg); color: var(--na-text); }
+
+  .toggle2 { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;
+    font-family: var(--font-mono); font-size: 15px; display: flex; align-items: center; justify-content: center;
+    background: var(--surface-alt); color: var(--ink-faint); }
+  .toggle2[data-on="1"] { background: var(--ok-bg); color: var(--ok-text); border-color: transparent; }
+  .toggle2:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .row-meta { font-size: 10.5px; color: var(--ink-faint); font-family: var(--font-mono); white-space: nowrap; }
+  .empty-state { padding: 46px 20px; text-align: center; color: var(--ink-soft); }
+  .empty-state .big { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .loading-state { padding: 60px 20px; text-align: center; color: var(--ink-soft); }
+  .spinner {
+    width: 26px; height: 26px; margin: 0 auto 14px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--brand); animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-state .msg { font-size: 13.5px; }
+
+  .banner { background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-text);
+    padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; display: none; }
+  .banner.show { display: block; }
+  .legend { margin-top: 16px; font-size: 12px; color: var(--ink-faint); line-height: 1.7; }
+  .legend b { color: var(--ink-soft); font-weight: 600; }
+  footer.foot { text-align: center; font-size: 11.5px; color: var(--ink-faint); margin-top: 28px; }
+
+  /* Gate de acceso */
+  .gate { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex;
+    align-items: center; justify-content: center; padding: 20px; }
+  .gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 28px; max-width: 360px; width: 100%; }
+  .gate-card h2 { margin: 0 0 6px; font-size: 17px; }
+  .gate-card p { margin: 0 0 16px; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+  .gate-card input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--surface-alt); color: var(--ink); font-size: 14px; margin-bottom: 10px; }
+  .gate-card .who-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+  .gate-card .who-btns button { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-alt); color: var(--ink); font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .gate-card .who-btns button[data-active="1"] { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .gate-card .err { color: var(--bad-text); font-size: 12.5px; margin-top: -4px; margin-bottom: 10px; display: none; }
+  .gate-card .err.show { display: block; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 640px) {
+    header.top h1 { font-size: 17px; }
+    .stats { grid-template-columns: 1fr; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar .btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h2>Cobranzas FADEP — Admin</h2>
+    <p>Elegí quién sos y poné la clave de administración para editar.</p>
+    <div class="who-btns" id="whoBtns">
+      <button type="button" data-who="Fernán">Fernán</button>
+      <button type="button" data-who="Fabricio">Fabricio</button>
+    </div>
+    <input type="password" id="gateToken" placeholder="Clave de administración" autocomplete="off">
+    <div class="err" id="gateErr">Clave incorrecta o sin conexión. Probá de nuevo.</div>
+    <button type="button" class="btn btn-primary" id="gateEnter" style="width:100%; justify-content:center">Entrar</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="inner">
+      <div>
+        <h1><span class="mark">FADEP·</span>Cobranzas — Admin</h1>
+        <div class="sub">Editable por Fernán y Fabricio · se sincroniza sola cada ~4s</div>
+      </div>
+      <div class="who">
+        <span id="whoAmI"></span>
+        <button type="button" id="switchUser">cambiar</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="banner" id="dbBanner"></div>
+
+    <section class="stats" aria-label="Contadores">
+      <div class="stat s-fact"><div class="n" id="statFacturar">–</div><div class="l">Pendientes de facturar</div></div>
+      <div class="stat s-cobr"><div class="n" id="statCobrar">–</div><div class="l">Pendientes de cobrar</div></div>
+      <div class="stat s-aut"><div class="n" id="statAutorizar">–</div><div class="l">Autorizados para entregar</div></div>
+    </section>
+
+    <div class="toolbar">
+      <input type="search" id="searchBox" placeholder="Buscar cliente, vendedor o Nº de pedido…" autocomplete="off">
+      <label class="toggle-label"><input type="checkbox" id="hideDelivered"> Ocultar entregados</label>
+      <button class="btn btn-primary" id="addBtn" type="button">+ Nuevo pedido</button>
+    </div>
+
+    <div class="table-shell">
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <div class="msg">Cargando pedidos…</div>
+      </div>
+      <div class="table-scroll" id="tableScroll" style="display:none">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-cliente">Cliente</th>
+              <th class="col-narrow">Nº Cliente</th>
+              <th class="col-mid">Vendedor</th>
+              <th class="col-narrow">Nº Pedido</th>
+              <th>Condición de pago</th>
+              <th title="Facturación anticipo">F.Ant</th>
+              <th title="Pago anticipo">P.Ant</th>
+              <th title="Solicitud factura final">Sol.F</th>
+              <th title="Factura final">Fact.F</th>
+              <th title="Pago final">Pago.F</th>
+              <th>Entrega</th>
+              <th title="Remito confirmado">Remito</th>
+              <th title="Ya entregado">Entreg.</th>
+              <th>Editado</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <div class="big">No hay pedidos para mostrar</div>
+      </div>
+    </div>
+
+    <datalist id="vendedorList">
+      <option value="Fadep"><option value="Carlos"><option value="Marisol"><option value="Ignacio"><option value="Pablo">
+    </datalist>
+
+    <div class="legend">
+      <div><b>Entrega</b> se calcula sola: verde = autorizado a entregar · amarillo = remitido, pendiente de cobro · rojo = falta un paso.</div>
+      <div><b>Pasos:</b> ☐ pendiente · ☑ hecho · — no aplica a esta condición de pago · ? sin confirmar. Tocá el cuadrito para rotar el estado.</div>
+      <div>Los pedidos no se borran nunca — si cargaste uno de más, dejalo en "—" en todos los pasos.</div>
+    </div>
+
+    <footer class="foot">Cobranzas FADEP · Admin</footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ======================================================================
+  // Pegá acá la URL /exec de tu Apps Script (misma que en el Visualizador)
+  var API_URL = "PEGAR_AQUI_LA_URL_DEL_APPS_SCRIPT";
+  // Tiene que ser IDÉNTICA a la propiedad ADMIN_TOKEN del Apps Script.
+  var ADMIN_TOKEN = "UUuzUtXYNWIm8yRXsIapHsxJfSmA";
+  // ======================================================================
+
+  var POLL_MS = 4000;
+  var STEP_STATES = ["☐","☑","—","?"];
+  var COND_OPTIONS = ["100% Anticipo","50% Ant. / 50% CE","100% Contra Entrega"];
+
+  var state = { pedidos: [], search: "", hideDelivered: false, who: null, justAdded: null, renderPending: false, loaded: false };
+  var pendingWrites = new Map();
+
+  function $(id){ return document.getElementById(id); }
+
+  // ---------- lógica de negocio (idéntica a la especificación) ----------
+  function applicableSteps(cond){
+    if (cond === "100% Anticipo") return {factAnticipo:true,pagoAnticipo:true,solicitudFactFinal:false,facturaFinal:false,pagoFinal:false};
+    if (cond === "100% Contra Entrega") return {factAnticipo:false,pagoAnticipo:false,solicitudFactFinal:true,facturaFinal:true,pagoFinal:true};
+    if (cond === "50% Ant. / 50% CE") return {factAnticipo:true,pagoAnticipo:true,solicitudFactFinal:true,facturaFinal:true,pagoFinal:true};
+    return {factAnticipo:true,pagoAnticipo:true,solicitudFactFinal:true,facturaFinal:true,pagoFinal:true};
+  }
+  function entregaStatus(p){
+    var c = p.condicion;
+    if (!c) return "";
+    var F=p.factAnticipo, G=p.pagoAnticipo, H=p.solicitudFactFinal, I=p.facturaFinal, J=p.pagoFinal, L=p.remitoConfirmado;
+    if (c === "100% Anticipo") {
+      if (F==="☑" && G==="☑") return "AUTORIZADO";
+      if (L==="☑" && F==="☑") return "REMITIDO";
+      return "NO_ENTREGAR";
+    }
+    if (c === "100% Contra Entrega") {
+      if (H==="☑" && I==="☑" && J==="☑") return "AUTORIZADO";
+      if (L==="☑" && H==="☑" && I==="☑") return "REMITIDO";
+      return "NO_ENTREGAR";
+    }
+    if (c === "50% Ant. / 50% CE") {
+      if (F==="☑" && G==="☑" && H==="☑" && I==="☑" && J==="☑") return "AUTORIZADO";
+      if (L==="☑" && F==="☑" && H==="☑" && I==="☑") return "REMITIDO";
+      return "NO_ENTREGAR";
+    }
+    return "";
+  }
+  function pendienteFacturar(p){
+    if (!p.condicion) return false;
+    var condAnt = (p.condicion === "100% Anticipo" || p.condicion === "50% Ant. / 50% CE");
+    var cond5050CE = (p.condicion === "50% Ant. / 50% CE" || p.condicion === "100% Contra Entrega");
+    return (condAnt && p.factAnticipo !== "☑" && p.factAnticipo !== "—") ||
+           (cond5050CE && p.solicitudFactFinal === "☑" && p.facturaFinal !== "☑" && p.facturaFinal !== "—");
+  }
+  function pendienteCobrar(p){
+    if (!p.condicion) return false;
+    return (p.factAnticipo === "☑" && p.pagoAnticipo !== "☑" && p.pagoAnticipo !== "—") ||
+           (p.facturaFinal === "☑" && p.pagoFinal !== "☑" && p.pagoFinal !== "—");
+  }
+  function autorizadoParaEntregar(p){
+    return entregaStatus(p) === "AUTORIZADO" && p.yaEntregado !== "☑";
+  }
+  function badgeFor(status){
+    if (status === "AUTORIZADO") return '<span class="badge ok">🟢 Autorizado</span>';
+    if (status === "REMITIDO") return '<span class="badge warn">🟡 Remitido — pend. cobro</span>';
+    if (status === "NO_ENTREGAR") return '<span class="badge bad">🔴 No entregar</span>';
+    return '<span class="badge empty">—</span>';
+  }
+  function escapeHtml(s){
+    return String(s==null?"":s).replace(/[&<>"']/g, function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});
+  }
+  function relTime(ts){
+    ts = Number(ts);
+    if (!ts) return "";
+    var diff = Date.now() - ts;
+    var m = Math.floor(diff/60000);
+    if (m < 1) return "recién";
+    if (m < 60) return m + "m";
+    var h = Math.floor(m/60);
+    if (h < 24) return h + "h";
+    return Math.floor(h/24) + "d";
+  }
+
+  // ---------- gate (quién sos + clave) ----------
+  function initGate(){
+    var savedWho = localStorage.getItem("cobranzas_who");
+    var savedToken = localStorage.getItem("cobranzas_token");
+    var whoBtns = $("whoBtns");
+    var selected = savedWho || null;
+
+    function paintWho(){
+      whoBtns.querySelectorAll("button").forEach(function(b){
+        b.setAttribute("data-active", b.getAttribute("data-who") === selected ? "1" : "0");
+      });
+    }
+    whoBtns.addEventListener("click", function(e){
+      var b = e.target.closest("button[data-who]");
+      if (!b) return;
+      selected = b.getAttribute("data-who");
+      paintWho();
+    });
+    paintWho();
+
+    if (savedToken) { $("gateToken").value = savedToken; }
+    else { $("gateToken").value = ADMIN_TOKEN; }
+
+    function enter(){
+      var token = $("gateToken").value.trim();
+      if (!selected || !token) {
+        $("gateErr").textContent = "Elegí quién sos y escribí la clave.";
+        $("gateErr").classList.add("show");
+        return;
+      }
+      state.who = selected;
+      localStorage.setItem("cobranzas_who", selected);
+      localStorage.setItem("cobranzas_token", token);
+      $("gate").classList.add("hidden");
+      $("app").classList.remove("hidden");
+      $("whoAmI").textContent = "Viendo como " + selected;
+      boot();
+    }
+    $("gateEnter").addEventListener("click", enter);
+    $("gateToken").addEventListener("keydown", function(e){ if (e.key === "Enter") enter(); });
+
+    // auto-entrar si ya había sesión guardada
+    if (savedWho && savedToken) {
+      selected = savedWho;
+      paintWho();
+      state.who = savedWho;
+      $("gate").classList.add("hidden");
+      $("app").classList.remove("hidden");
+      $("whoAmI").textContent = "Viendo como " + savedWho;
+      boot();
+    }
+  }
+
+  function currentToken(){ return localStorage.getItem("cobranzas_token") || ""; }
+
+  // ---------- red ----------
+  function apiGet(){
+    return fetch(API_URL, { method: "GET" }).then(function(r){ return r.json(); });
+  }
+  function apiPost(body){
+    body.token = currentToken();
+    return fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); });
+  }
+
+  function showBanner(msg){ var b=$("dbBanner"); b.textContent = msg; b.classList.add("show"); }
+  function hideBanner(){ $("dbBanner").classList.remove("show"); }
+
+  function isEditingText(){
+    var el = document.activeElement;
+    return !!(el && (el.classList.contains("cliente-input") || el.classList.contains("field-input")));
+  }
+
+  function revealAfterLoad(){
+    if (!state.loaded) {
+      state.loaded = true;
+      $("loadingState").style.display = "none";
+      $("tableScroll").style.display = "";
+    }
+  }
+
+  var fetchInFlight = false;
+
+  function fetchPedidos(){
+    if (!API_URL || API_URL.indexOf("PEGAR_AQUI") !== -1) {
+      showBanner("Falta configurar la URL del Apps Script en este archivo (API_URL) antes de publicarlo.");
+      revealAfterLoad();
+      return;
+    }
+    if (fetchInFlight) return; // ya hay una consulta en curso, no dispares otra encima
+    fetchInFlight = true;
+    apiGet().then(function(data){
+      if (!data || !data.ok) { showBanner("El servidor de datos respondió con un error."); revealAfterLoad(); return; }
+      hideBanner();
+      var incoming = data.pedidos || [];
+      var byId = {};
+      incoming.forEach(function(p){ byId[p.id] = p; });
+
+      // Combina lo que trae el servidor con lo que tenemos localmente: si un pedido
+      // tiene una escritura todavía en curso, o nuestra versión local es más nueva
+      // que la que acaba de llegar, nos quedamos con la local (evita que una lectura
+      // que arrancó antes de que termine de guardarse "pise" lo recién escrito).
+      var merged = [];
+      var seen = {};
+      state.pedidos.forEach(function(localP){
+        var inc = byId[localP.id];
+        if (inc) {
+          seen[localP.id] = true;
+          var localUpdated = Number(localP.updatedAt) || 0;
+          var incUpdated = Number(inc.updatedAt) || 0;
+          if (pendingWrites.has(localP.id) || incUpdated < localUpdated) {
+            merged.push(localP);
+          } else {
+            merged.push(inc);
+          }
+        } else if (pendingWrites.has(localP.id)) {
+          merged.push(localP); // recién creado, todavía no aparece en la lectura
+        }
+      });
+      incoming.forEach(function(p){
+        if (!seen[p.id]) merged.push(p); // pedido nuevo (creado por Fabricio, por ejemplo)
+      });
+
+      merged.sort(function(a,b){ return (Number(a.createdAt)||0) - (Number(b.createdAt)||0); });
+      state.pedidos = merged;
+      if (isEditingText()) { state.renderPending = true; return; }
+      render();
+    }).catch(function(err){
+      console.error(err);
+      showBanner("No se pudo conectar con los datos. Puede ser un problema de conexión temporal.");
+      revealAfterLoad();
+    }).finally(function(){ fetchInFlight = false; });
+  }
+
+  function queueWrite(id, patch){
+    var full = Object.assign({}, patch, { updatedBy: state.who || "" });
+    var prev = pendingWrites.get(id) || Promise.resolve();
+    var next = prev.then(function(){
+      return apiPost({ action: "upsert", id: id, patch: full });
+    }).then(function(res){
+      if (!res || !res.ok) {
+        if (res && res.error === "unauthorized") {
+          showBanner("La clave de administración no es válida. Volvé a entrar.");
+          localStorage.removeItem("cobranzas_token");
+        } else {
+          showBanner("No se pudo guardar un cambio. Reintentá en un momento.");
+        }
+      }
+      setTimeout(fetchPedidos, 500);
+    }).catch(function(err){
+      console.error(err);
+      showBanner("No se pudo guardar un cambio (sin conexión). Reintentá.");
+    }).finally(function(){
+      if (pendingWrites.get(id) === next) pendingWrites.delete(id);
+    });
+    pendingWrites.set(id, next);
+    return next;
+  }
+
+  function newId_(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  }
+
+  function addPedido(){
+    var now = Date.now();
+    var id = newId_();
+    var nuevo = {
+      id: id, numCliente: "", cliente: "", vendedor: "", numPedido: "",
+      condicion: "", factAnticipo: "☐", pagoAnticipo: "☐", solicitudFactFinal: "☐",
+      facturaFinal: "☐", pagoFinal: "☐", remitoConfirmado: "☐", yaEntregado: "☐",
+      createdAt: now, updatedAt: now, updatedBy: state.who || ""
+    };
+    state.pedidos.push(nuevo);
+    state.justAdded = id;
+    render();
+    queueWrite(id, {
+      numCliente:"", cliente:"", vendedor:"", numPedido:"", condicion:"",
+      factAnticipo:"☐", pagoAnticipo:"☐", solicitudFactFinal:"☐", facturaFinal:"☐", pagoFinal:"☐",
+      remitoConfirmado:"☐", yaEntregado:"☐"
+    });
+    state.justAdded = null;
+  }
+
+  // ---------- render ----------
+  function stepButtonHtml(p, field, label){
+    var v = p[field] || "☐";
+    return '<button type="button" class="step-btn" data-state="'+v+'" data-id="'+p.id+'" data-field="'+field+'" title="'+label+': '+v+'">'+v+'</button>';
+  }
+
+  function render(){
+    state.renderPending = false;
+    if (!state.loaded) {
+      state.loaded = true;
+      $("loadingState").style.display = "none";
+      $("tableScroll").style.display = "";
+    }
+    var tbody = $("tbody");
+    var q = state.search.trim().toLowerCase();
+
+    var facturar=0, cobrar=0, autorizar=0;
+    state.pedidos.forEach(function(p){
+      if (pendienteFacturar(p)) facturar++;
+      if (pendienteCobrar(p)) cobrar++;
+      if (autorizadoParaEntregar(p)) autorizar++;
+    });
+    $("statFacturar").textContent = facturar;
+    $("statCobrar").textContent = cobrar;
+    $("statAutorizar").textContent = autorizar;
+
+    var visible = state.pedidos.filter(function(p){
+      if (state.hideDelivered && p.yaEntregado === "☑") return false;
+      if (!q) return true;
+      var hay = (p.cliente||"")+" "+(p.vendedor||"")+" "+(p.numPedido||"")+" "+(p.numCliente||"");
+      return hay.toLowerCase().indexOf(q) !== -1;
+    });
+
+    if (!visible.length) {
+      tbody.innerHTML = "";
+      $("emptyState").style.display = "block";
+    } else {
+      $("emptyState").style.display = "none";
+      tbody.innerHTML = visible.map(function(p){
+        var status = entregaStatus(p);
+        var condSel = '<select class="cond-select" data-id="'+p.id+'" data-role="condicion">' +
+          '<option value="" '+(p.condicion?'':'selected')+' disabled>Elegir…</option>' +
+          COND_OPTIONS.map(function(o){ return '<option value="'+o+'" '+(p.condicion===o?'selected':'')+'>'+o+'</option>'; }).join("") +
+          '</select>';
+        var meta = p.updatedBy ? (escapeHtml(p.updatedBy) + " · " + relTime(p.updatedAt)) : relTime(p.updatedAt);
+
+        return '<tr data-row="'+p.id+'">' +
+          '<td class="col-cliente"><input class="cliente-input" data-id="'+p.id+'" data-role="cliente" value="'+escapeHtml(p.cliente)+'" placeholder="Nombre del cliente"></td>' +
+          '<td class="col-narrow"><input class="field-input" data-id="'+p.id+'" data-role="numCliente" value="'+escapeHtml(p.numCliente)+'" placeholder="—" inputmode="numeric"></td>' +
+          '<td class="col-mid"><input class="field-input" data-id="'+p.id+'" data-role="vendedor" value="'+escapeHtml(p.vendedor)+'" placeholder="—" list="vendedorList"></td>' +
+          '<td class="col-narrow"><input class="field-input" data-id="'+p.id+'" data-role="numPedido" value="'+escapeHtml(p.numPedido)+'" placeholder="—" inputmode="numeric"></td>' +
+          '<td>'+condSel+'</td>' +
+          '<td>'+stepButtonHtml(p,"factAnticipo","Fact. anticipo")+'</td>' +
+          '<td>'+stepButtonHtml(p,"pagoAnticipo","Pago anticipo")+'</td>' +
+          '<td>'+stepButtonHtml(p,"solicitudFactFinal","Solicitud fact. final")+'</td>' +
+          '<td>'+stepButtonHtml(p,"facturaFinal","Factura final")+'</td>' +
+          '<td>'+stepButtonHtml(p,"pagoFinal","Pago final")+'</td>' +
+          '<td>'+badgeFor(status)+'</td>' +
+          '<td><button type="button" class="toggle2" data-on="'+(p.remitoConfirmado==="☑"?"1":"0")+'" data-id="'+p.id+'" data-role="remitoConfirmado" title="Remito confirmado">'+(p.remitoConfirmado==="☑"?"☑":"☐")+'</button></td>' +
+          '<td><button type="button" class="toggle2" data-on="'+(p.yaEntregado==="☑"?"1":"0")+'" data-id="'+p.id+'" data-role="yaEntregado" title="Ya entregado">'+(p.yaEntregado==="☑"?"☑":"☐")+'</button></td>' +
+          '<td><span class="row-meta">'+meta+'</span></td>' +
+        '</tr>';
+      }).join("");
+    }
+
+    if (state.justAdded) {
+      var el = tbody.querySelector('tr[data-row="'+state.justAdded+'"] .cliente-input');
+      if (el) el.focus();
+    }
+  }
+
+  // ---------- eventos ----------
+  document.addEventListener("click", function(e){
+    var stepBtn = e.target.closest(".step-btn");
+    if (stepBtn) {
+      var id = stepBtn.getAttribute("data-id");
+      var field = stepBtn.getAttribute("data-field");
+      var cur = stepBtn.getAttribute("data-state");
+      var next = STEP_STATES[(STEP_STATES.indexOf(cur)+1) % STEP_STATES.length];
+      var patch = {}; patch[field] = next;
+      var local = state.pedidos.find(function(p){ return p.id===id; });
+      if (local) { local[field] = next; local.updatedAt = Date.now(); }
+      render();
+      queueWrite(id, patch);
+      return;
+    }
+    var tgl = e.target.closest(".toggle2");
+    if (tgl) {
+      var id2 = tgl.getAttribute("data-id");
+      var field2 = tgl.getAttribute("data-role");
+      var on = tgl.getAttribute("data-on") === "1";
+      var next2 = on ? "☐" : "☑";
+      var patch2 = {}; patch2[field2] = next2;
+      var local2 = state.pedidos.find(function(p){ return p.id===id2; });
+      if (local2) { local2[field2] = next2; local2.updatedAt = Date.now(); }
+      render();
+      queueWrite(id2, patch2);
+      return;
+    }
+  });
+
+  document.addEventListener("change", function(e){
+    if (e.target.matches('select[data-role="condicion"]')) {
+      var id = e.target.getAttribute("data-id");
+      var val = e.target.value;
+      var local = state.pedidos.find(function(p){ return p.id===id; });
+      if (!local) return;
+      var appl = applicableSteps(val);
+      var patch = { condicion: val };
+      var map = {factAnticipo: appl.factAnticipo, pagoAnticipo: appl.pagoAnticipo, solicitudFactFinal: appl.solicitudFactFinal, facturaFinal: appl.facturaFinal, pagoFinal: appl.pagoFinal};
+      Object.keys(map).forEach(function(f){
+        if (!map[f]) { patch[f] = "—"; local[f] = "—"; }
+        else if (local[f] === "—") { patch[f] = "☐"; local[f] = "☐"; }
+      });
+      local.condicion = val;
+      local.updatedAt = Date.now();
+      render();
+      queueWrite(id, patch);
+    }
+  });
+
+  document.addEventListener("blur", function(e){
+    var t = e.target;
+    if (t.matches && (t.matches('.cliente-input') || t.matches('.field-input'))) {
+      var id = t.getAttribute("data-id");
+      var role = t.getAttribute("data-role");
+      var val = t.value;
+      var local = state.pedidos.find(function(p){ return p.id===id; });
+      if (!local) return;
+      if (local[role] === val) {
+        if (state.renderPending) render();
+        return;
+      }
+      local[role] = val;
+      local.updatedAt = Date.now();
+      var patch = {}; patch[role] = val;
+      queueWrite(id, patch);
+      if (state.renderPending) render();
+    }
+  }, true);
+
+  $("addBtn").addEventListener("click", addPedido);
+  $("searchBox").addEventListener("input", function(e){ state.search = e.target.value; render(); });
+  $("hideDelivered").addEventListener("change", function(e){ state.hideDelivered = e.target.checked; render(); });
+  document.getElementById("switchUser").addEventListener("click", function(){
+    $("app").classList.add("hidden");
+    $("gate").classList.remove("hidden");
+    $("gateErr").classList.remove("show");
+  });
+
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "visible" && !$("app").classList.contains("hidden")) fetchPedidos();
+  });
+
+  var pollTimer = null;
+  function boot(){
+    fetchPedidos();
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(fetchPedidos, POLL_MS);
+  }
+
+  initGate();
+})();
+</script>
+</body>
+</html>
